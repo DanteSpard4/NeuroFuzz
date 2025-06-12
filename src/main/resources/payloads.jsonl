@@ -1,0 +1,3 @@
+{"username": "admin", "password": "1234"}
+{"username": "root", "password": "toor"}
+{"username": "' OR 1=1 --", "password": ""}
