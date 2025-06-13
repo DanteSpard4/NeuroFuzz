@@ -6,34 +6,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static com.dantespard4.neurofuzz.util.AnsiColors.*;
 
 public class Fuzzer {
 
-    private final PayloadMutator mutator = new PayloadMutator();
     private final HttpExecutor httpExecutor = new HttpExecutor();
     private final ObjectWriter jsonWriter = new ObjectMapper().writer();
+    private Set<String> mutationStrategies = new HashSet<>();
 
-    public void fuzz(String url) {
-        String originalPayload = "{\"username\": \"user\", \"password\": \"pass\"}";
-        String mutatedPayload = mutator.mutateJson(originalPayload);
-
-        httpExecutor.sendPost(url, mutatedPayload);
+    public void setMutationStrategies(Set<String> mutationStrategies) {
+        this.mutationStrategies = mutationStrategies;
     }
 
+
     public void fuzzMultiple(String url, File payloadFile, boolean verbose, File saveFile) {
-        try (BufferedReader br = new BufferedReader(new FileReader(payloadFile));
+        try (BufferedReader br = new BufferedReader(new FileReader(payloadFile, StandardCharsets.UTF_8));
              BufferedWriter bw = (saveFile != null) ? new BufferedWriter(new FileWriter(saveFile)) : null
         ) {
             String line;
             int count = 1;
 
             while ((line = br.readLine()) != null) {
-                String mutated = mutator.mutateJson(line);
-
+                String mutated = Mutator.mutate(line, mutationStrategies);
                 if (verbose) {
                     System.out.println("[#] Payload #" + count + ": " + mutated);
                 } else {
@@ -42,10 +42,8 @@ public class Fuzzer {
 
                 HttpResult result = httpExecutor.sendPost(url, mutated);
                 String color = colorForStatus(result.statusCode());
-
                 if(bw != null) {
                     Map<String, String> logEntry = new LinkedHashMap<>();
-
                     logEntry.put("payload", mutated);
                     logEntry.put("statusCode", String.valueOf(result.statusCode()));
                     logEntry.put("responseTimeMs", String.valueOf(result.responseTimeMs()));
@@ -63,7 +61,6 @@ public class Fuzzer {
                     System.out.println(color + "[✔] " + result.statusCode() + " - " + result.responseTimeMs() + "ms"
                             + " - " + result.responseBody().length() + " bytes" + RESET);
                 }
-
                 System.out.println("----");
                 count++;
             }
