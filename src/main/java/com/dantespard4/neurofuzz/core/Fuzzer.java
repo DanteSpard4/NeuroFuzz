@@ -19,11 +19,15 @@ public class Fuzzer {
     private final HttpExecutor httpExecutor = new HttpExecutor();
     private final ObjectWriter jsonWriter = new ObjectMapper().writer();
     private Set<String> mutationStrategies = new HashSet<>();
+    private boolean onlyErrors;
 
     public void setMutationStrategies(Set<String> mutationStrategies) {
         this.mutationStrategies = mutationStrategies;
     }
 
+    public void setOnlyErrors(boolean onlyErrors) {
+        this.onlyErrors = onlyErrors;
+    }
 
     public void fuzzMultiple(String url, File payloadFile, boolean verbose, File saveFile) {
         try (BufferedReader br = new BufferedReader(new FileReader(payloadFile, StandardCharsets.UTF_8));
@@ -33,6 +37,9 @@ public class Fuzzer {
             int count = 1;
 
             while ((line = br.readLine()) != null) {
+
+
+
                 String mutated = Mutator.mutate(line, mutationStrategies);
                 if (verbose) {
                     System.out.println("[#] Payload #" + count + ": " + mutated);
@@ -41,6 +48,12 @@ public class Fuzzer {
                 }
 
                 HttpResult result = httpExecutor.sendPost(url, mutated);
+
+                if (onlyErrors && (result.statusCode() < 400)){
+                    count ++;
+                    continue;
+                }
+
                 String color = colorForStatus(result.statusCode());
                 if(bw != null) {
                     Map<String, String> logEntry = new LinkedHashMap<>();

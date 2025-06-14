@@ -37,6 +37,10 @@ public class FuzzCommand implements Callable<Integer> {
     @Option(names = {"-m","--mutations"}, description = "Tipos de mutaciones (separados por coma: replace-char,delete-key,insert-junk,repeat-key,empty-value)")
     private String mutationStrategies;
 
+    @Option(names = {"-e", "--only-errors"}, description = "Mostrar solo respuestas con errores (4xx y 5xx)")
+    private boolean onlyErrors;
+
+
     @Spec
     private CommandSpec spec;
 
@@ -45,6 +49,8 @@ public class FuzzCommand implements Callable<Integer> {
 
         File resolvedFile = saveFile;
         Fuzzer fuzzer = new Fuzzer();
+
+        fuzzer.setOnlyErrors(onlyErrors);
 
         var value = spec.optionsMap().get("--save").getValue();
         if (value != null && value.toString().isEmpty()) {
