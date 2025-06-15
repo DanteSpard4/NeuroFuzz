@@ -61,7 +61,9 @@ public class FuzzCommand implements Callable<Integer> {
         System.out.println("[*] Ejecutando fuzzer contra: " + url);
 
         if (mutationStrategies != null && !mutationStrategies.isEmpty()) {
-            Set<String> strategies = new HashSet<>(Arrays.asList(mutationStrategies.split(",")));
+            Set<String> strategies = new HashSet<>(Arrays.stream(mutationStrategies.split(","))
+                    .map(String::trim)
+                    .toList());
             fuzzer.setMutationStrategies(strategies);
             System.out.println("[*] Estrategias de mutación: " + strategies);
         } else {
