@@ -23,7 +23,7 @@ public class Mutator {
             return MAPPER.writeValueAsString(mutated);
 
         } catch (IOException e) {
-            System.err.println("[!] Error al procesar el JSON: " + e.getMessage());
+            System.err.println("[!] Error processing JSON: " + e.getMessage());
             return input; // fallback
         }
     }
