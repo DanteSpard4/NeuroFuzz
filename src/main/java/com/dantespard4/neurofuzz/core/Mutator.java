@@ -88,13 +88,5 @@ public class Mutator {
         }
     }
 
-    private static void emptyValuesOld(ObjectNode node) {
-        node.fieldNames().forEachRemaining(field -> {
-            JsonNode value = node.get(field);
-            if (value.isTextual()) node.put(field, "");
-            else if (value.isNumber()) node.put(field, 0);
-            else if (value.isBoolean()) node.put(field, false);
-        });
-    }
 }
 
