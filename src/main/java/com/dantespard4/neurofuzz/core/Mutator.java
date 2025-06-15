@@ -35,7 +35,7 @@ public class Mutator {
             case "insert-junk" -> addJunkField(node);
             case "repeat-key" -> simulateDuplicateKey(node);
             case "empty-value" -> setRandomFieldToEmptyValue(node);
-            default -> System.err.println("[!] Estrategia desconocida: " + strategy);
+            default -> System.err.println("[!] Unknown strategy: " + strategy);
         }
     }
 
