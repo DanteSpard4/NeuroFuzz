@@ -1,6 +1,6 @@
 package com.dantespard4.neurofuzz.core;
 
-import java.util.Random;
+import java.io.IOException;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,82 +10,86 @@ import java.util.*;
 
 public class Mutator {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-    private static final Random random = new Random();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final Random RANDOM = new Random();
 
     public static String mutate(String input, Set<String> strategies) {
         try {
-            JsonNode original = mapper.readTree(input);
+            JsonNode original = MAPPER.readTree(input);
             ObjectNode mutated = original.deepCopy();
 
-            if (strategies.contains("replace-char")) {
-                replaceChars(mutated);
-            }
-            if (strategies.contains("delete-key")) {
-                deleteRandomKey(mutated);
-            }
-            if (strategies.contains("insert-junk")) {
-                insertJunk(mutated);
-            }
-            if (strategies.contains("repeat-key")) {
-                // JSON doesn't support repeated keys; we simulate by merging keys
-                insertDuplicateKey(mutated);
-            }
-            if (strategies.contains("empty-value")) {
-                emptyValues(mutated);
-            }
+            strategies.forEach(strategy -> applyStrategy(mutated, strategy));
 
-            return mapper.writeValueAsString(mutated);
+            return MAPPER.writeValueAsString(mutated);
 
-        } catch (Exception e) {
+        } catch (IOException e) {
+            System.err.println("[!] Error al procesar el JSON: " + e.getMessage());
             return input; // fallback
         }
     }
 
-    private static void replaceChars(ObjectNode node) {
+    private static void applyStrategy(ObjectNode node, String strategy) {
+        switch (strategy) {
+            case "replace-char" -> mutateTextByReplacingCharacters(node);
+            case "delete-key" -> removeRandomKey(node);
+            case "insert-junk" -> addJunkField(node);
+            case "repeat-key" -> simulateDuplicateKey(node);
+            case "empty-value" -> setRandomFieldToEmptyValue(node);
+            default -> System.err.println("[!] Estrategia desconocida: " + strategy);
+        }
+    }
+
+    private static void mutateTextByReplacingCharacters(ObjectNode node) {
         node.fieldNames().forEachRemaining(field -> {
             JsonNode value = node.get(field);
             if (value.isTextual()) {
-                String mutated = value.asText().replace("a", "@").replace("e", "3");
+                String mutated = value.asText().
+                        replace("a", "@").
+                        replace("e", "3");
                 node.put(field, mutated);
             }
         });
     }
 
-    private static void deleteRandomKey(ObjectNode node) {
-        List<String> keys = new ArrayList<>();
-        node.fieldNames().forEachRemaining(keys::add);
+    private static void removeRandomKey(ObjectNode node) {
+        List<String> keys = collectFieldNames(node);
         if (!keys.isEmpty()) {
-            String key = keys.get(random.nextInt(keys.size()));
-            node.remove(key);
+            node.remove(keys.get(RANDOM.nextInt(keys.size())));
         }
     }
 
-    private static void insertJunk(ObjectNode node) {
-        node.put("$$junk" + random.nextInt(1000), "???");
+    private static void addJunkField(ObjectNode node) {
+        node.put("$$junk" + RANDOM.nextInt(1000), "???");
     }
 
-    private static void insertDuplicateKey(ObjectNode node) {
+    private static void simulateDuplicateKey(ObjectNode node) {
         // Duplicate keys aren't allowed in JSON structure
-        // Instead, we re-add an existing key with a new value
-        List<String> keys = new ArrayList<>();
-        node.fieldNames().forEachRemaining(keys::add);
+        List<String> keys = collectFieldNames(node);
         if (!keys.isEmpty()) {
-            String key = keys.get(random.nextInt(keys.size()));
+            String key = getRandomElement(keys);
             node.put(key + "_copy", "duplicated_value");
         }
     }
 
-    private static void emptyValues(ObjectNode node) {
-        List<String> fields = new ArrayList<>();
-        node.fieldNames().forEachRemaining(fields::add);
+    private static void setRandomFieldToEmptyValue(ObjectNode node) {
+        List<String> fields = collectFieldNames(node);
         if (!fields.isEmpty()) {
-            String field = fields.get(random.nextInt(fields.size()));
+            String field = getRandomElement(fields);
             JsonNode value = node.get(field);
             if (value.isTextual()) node.put(field, "");
             else if (value.isNumber()) node.put(field, 0);
             else if (value.isBoolean()) node.put(field, false);
         }
+    }
+
+    private static List<String> collectFieldNames(ObjectNode node) {
+        List<String> names = new ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return names;
+    }
+
+    private static <T> T getRandomElement(List<T> list) {
+        return list.get(RANDOM.nextInt(list.size()));
     }
 
 }

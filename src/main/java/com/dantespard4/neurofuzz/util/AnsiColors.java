@@ -9,14 +9,12 @@ public class AnsiColors {
     public static final String GRAY = "\u001B[90m";
 
     public static String colorForStatus(int statusCode) {
-        if (statusCode >= 200 && statusCode < 300) {
-            return GREEN;
-        } else if (statusCode >= 400 && statusCode < 500) {
-            return YELLOW;
-        } else if (statusCode >= 500 || statusCode == 0) {
-            return RED;
-        } else {
-            return BLUE;
-        }
+        return switch (statusCode / 100) {
+            case 2 -> GREEN;
+            case 3 -> BLUE;
+            case 4 -> YELLOW;
+            case 5, 0 -> RED;
+            default -> GRAY;
+        };
     }
 }

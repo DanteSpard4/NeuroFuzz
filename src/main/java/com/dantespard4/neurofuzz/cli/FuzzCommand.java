@@ -14,16 +14,16 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 @Command(name = "neurofuzz", mixinStandardHelpOptions = true, version = "NeuroFuzz 0.1.0",
-        description = "Fuzzer básico para APIs HTTP")
+        description = "Basic fuzzer for HTTP APIs")
 public class FuzzCommand implements Callable<Integer> {
 
-    @Option(names = {"-u", "--url"}, required = true, description = "URL del endpoint a testear")
+    @Option(names = {"-u", "--url"}, required = true, description = "Endpoint URL to test")
     private String url;
 
-    @Option(names = {"-p", "--payloads"}, required = true, description = "Archivo .jsonl con los payloads")
+    @Option(names = {"-p", "--payloads"}, required = true, description = "Payloads .jsonl file")
     private File payloadsFile;
 
-    @Option(names = {"-v", "--verbose"}, description = "Modo detallado, muestra más información durante la ejecución")
+    @Option(names = {"-v", "--verbose"}, description = "Verbose mode, shows more information during execution")
     private boolean verbose;
 
     @Option(
@@ -34,11 +34,14 @@ public class FuzzCommand implements Callable<Integer> {
     )
     private File saveFile;
 
-    @Option(names = {"-m","--mutations"}, description = "Tipos de mutaciones (separados por coma: replace-char,delete-key,insert-junk,repeat-key,empty-value)")
+    @Option(names = {"-m","--mutations"}, description = "Mutation types (comma separated: replace-char,delete-key,insert-junk,repeat-key,empty-value)")
     private String mutationStrategies;
 
-    @Option(names = {"-e", "--only-errors"}, description = "Mostrar solo respuestas con errores (4xx y 5xx)")
+    @Option(names = {"-e", "--only-errors"}, description = "Show only error responses (4xx and 5xx)")
     private boolean onlyErrors;
+
+    @Option(names = {"-t", "--timeout"}, description = "Maximum wait time for each request (in seconds)", defaultValue = "10")
+    private int timeoutSeconds;
 
 
     @Spec
@@ -47,31 +50,52 @@ public class FuzzCommand implements Callable<Integer> {
     @Override
     public Integer call() {
 
-        File resolvedFile = saveFile;
-        Fuzzer fuzzer = new Fuzzer();
+        Fuzzer fuzzer = configureFuzzer();
+        File outputFile = resolveOutputFile();
+        displayStartupInfo(outputFile);
+        fuzzer.fuzzMultiple(url, payloadsFile, verbose,outputFile);
+        return 0;
+    }
 
+    private Fuzzer configureFuzzer() {
+        Fuzzer fuzzer = new Fuzzer(timeoutSeconds);
         fuzzer.setOnlyErrors(onlyErrors);
+        fuzzer.setMutationStrategies(parseMutationStrategies());
+        return fuzzer;
+    }
 
-        var value = spec.optionsMap().get("--save").getValue();
-        if (value != null && value.toString().isEmpty()) {
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
-            resolvedFile = new File("fuzz-results-" + timestamp + ".jsonl");
-            System.out.println("[i] Resultados se guardarán en: " + resolvedFile.getName());
+    private File resolveOutputFile() {
+        if (saveFile != null) {
+            Object value = spec.optionsMap().get("--save").getValue();
+            if (value != null && value.toString().isEmpty()) {
+                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+                return new File("fuzz-results-" + timestamp + ".jsonl");
+            }
         }
-        System.out.println("[*] Ejecutando fuzzer contra: " + url);
+        return saveFile;
+    }
 
+    private void displayStartupInfo(File outputFile) {
+        System.out.println("[*] Running fuzzer against: " + url);
+
+        if (outputFile != null) {
+            System.out.println("[i] Results will be saved in: " + outputFile.getName());
+        }
+
+        Set<String> strategies = parseMutationStrategies();
+        if (!strategies.isEmpty()) {
+            System.out.println("[*] Mutation strategies: " + strategies);
+        } else {
+            System.out.println("[*] No mutation strategies specified, using defaults.");
+        }
+    }
+
+    private Set<String> parseMutationStrategies() {
         if (mutationStrategies != null && !mutationStrategies.isEmpty()) {
-            Set<String> strategies = new HashSet<>(Arrays.stream(mutationStrategies.split(","))
+            return new HashSet<>(Arrays.stream(mutationStrategies.split(","))
                     .map(String::trim)
                     .toList());
-            fuzzer.setMutationStrategies(strategies);
-            System.out.println("[*] Estrategias de mutación: " + strategies);
-        } else {
-            System.out.println("[*] No se especificaron estrategias de mutación, usando las predeterminadas.");
-            fuzzer.setMutationStrategies(Set.of("replace-char"));
         }
-
-        fuzzer.fuzzMultiple(url, payloadsFile, verbose,resolvedFile);
-        return 0;
+        return Set.of("replace-char"); // default strategy
     }
 }
