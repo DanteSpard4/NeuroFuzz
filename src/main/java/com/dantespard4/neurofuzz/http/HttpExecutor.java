@@ -40,7 +40,7 @@ public class HttpExecutor {
     }
 
     private HttpResult handleHttpError(IOException e) {
-        System.out.printf("Error en petición HTTP: %s%n", e);
+        System.out.printf("Error in HTTP request: %s%n", e);
         if (e.getMessage().contains("timeout")) {
             return new HttpResult(600, 0, "[!] Timeout: " + e.getMessage());
         }
