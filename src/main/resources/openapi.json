@@ -1,0 +1,67 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Comment API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/user/comment": {
+      "post": {
+        "tags": ["user-controller"],
+        "summary": "Add a comment",
+        "operationId": "addComment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Comment added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CommentRequest": {
+        "type": "object",
+        "required": ["userId", "comment"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "abc123"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Great post!"
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 4
+          }
+        }
+      }
+    }
+  }
+}
