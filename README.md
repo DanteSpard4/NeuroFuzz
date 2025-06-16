@@ -86,7 +86,7 @@ Saved to file: fuzz_20250612_1612.jsonl
 - [ ] Custom HTTP methods (`--method` or read from `.jsonl`)
 - [ ] Learn from real traffic (Phase 2 or 3 – TBD)
 - [ ] CI/CD integration for automated testing
-- [ ] swagger.json support for API documentation
+- [ ] swagger/openapi.json support for API documentation
 - [ ] IA-powered payload generation (Phase 3)
 
 ---
