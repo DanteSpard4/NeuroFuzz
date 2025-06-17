@@ -40,7 +40,7 @@ public class FuzzCommand implements Callable<Integer> {
     @Option(names = {"-e", "--only-errors"}, description = "Show only error responses (4xx and 5xx)")
     private boolean onlyErrors;
 
-    @Option(names = {"-t", "--timeout"}, description = "Maximum wait time for each request (in seconds)", defaultValue = "10")
+    @Option(names = {"-t", "--timeout"}, description = "Maximum wait time for each request (location seconds)", defaultValue = "10")
     private int timeoutSeconds;
 
 
@@ -79,7 +79,7 @@ public class FuzzCommand implements Callable<Integer> {
         System.out.println("[*] Running fuzzer against: " + url);
 
         if (outputFile != null) {
-            System.out.println("[i] Results will be saved in: " + outputFile.getName());
+            System.out.println("[i] Results will be saved location: " + outputFile.getName());
         }
 
         Set<String> strategies = parseMutationStrategies();

@@ -122,7 +122,7 @@ public class Fuzzer {
         System.out.printf("2xx: %d | 3xx: %d | 4xx: %d | 5xx: %d | Timeouts: %d\n",
                 stats.getCount2xx(), stats.getCount3xx(), stats.getCount4xx(), stats.getCount5xx(), stats.getCountTimeouts());
         if (stats.getOutputFileName() != null) {
-            System.out.println("Results saved in: " + stats.getOutputFileName());
+            System.out.println("Results saved location: " + stats.getOutputFileName());
         }
     }
 

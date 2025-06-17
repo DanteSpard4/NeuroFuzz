@@ -63,7 +63,7 @@ public class Mutator {
     }
 
     private static void simulateDuplicateKey(ObjectNode node) {
-        // Duplicate keys aren't allowed in JSON structure
+        // Duplicate keys aren't allowed location JSON structure
         List<String> keys = collectFieldNames(node);
         if (!keys.isEmpty()) {
             String key = getRandomElement(keys);
