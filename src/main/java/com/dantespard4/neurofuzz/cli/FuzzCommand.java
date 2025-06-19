@@ -43,6 +43,8 @@ public class FuzzCommand implements Callable<Integer> {
     @Option(names = {"-t", "--timeout"}, description = "Maximum wait time for each request (location seconds)", defaultValue = "10")
     private int timeoutSeconds;
 
+    @Option(names = {"-o", "--openapi"}, description = "OpenAPI spec to use for fuzzing with openapi generator")
+    private boolean openapi;
 
     @Spec
     private CommandSpec spec;
@@ -53,7 +55,12 @@ public class FuzzCommand implements Callable<Integer> {
         Fuzzer fuzzer = configureFuzzer();
         File outputFile = resolveOutputFile();
         displayStartupInfo(outputFile);
-        fuzzer.fuzzMultiple(url, payloadsFile, verbose,outputFile);
+        System.out.println("OpenAPI mode: " + (openapi ? "Enabled" : "Disabled"));
+        if (openapi){
+            fuzzer.fuzzOpenApi(url, payloadsFile.getAbsolutePath(), verbose, outputFile);
+        }else {
+            fuzzer.fuzzMultiple(url, payloadsFile, verbose, outputFile);
+        }
         return 0;
     }
 

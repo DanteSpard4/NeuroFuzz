@@ -29,7 +29,6 @@ public class HttpExecutor {
         RequestBody body = RequestBody.create(jsonPayload, MediaType.parse("application/json; charset=utf-8"));
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
-        // Aplicar headers si están presentes
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 requestBuilder.addHeader(header.getKey(), header.getValue());
@@ -57,10 +56,6 @@ public class HttpExecutor {
         }
         Request request = requestBuilder.build();
         return getHttpResult(request);
-    }
-
-    public HttpResult sendHttpMethod(String url, String method, String jsonPayload) {
-        return sendHttpMethod(url, method, jsonPayload, null);
     }
 
     @NotNull

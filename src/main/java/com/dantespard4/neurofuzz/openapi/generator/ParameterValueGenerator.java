@@ -10,15 +10,15 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Genera valores de ejemplo para parámetros de API basados en su tipo y ubicación.
+ * Generates example values for API parameters based on their type and location.
  */
 public class ParameterValueGenerator {
 
     /**
-     * Genera valores de ejemplo para parámetros de tipo path.
+     * Generates example values for path parameters.
      *
-     * @param parameters Lista de parámetros de API
-     * @return Mapa con nombres de parámetros y sus valores de ejemplo
+     * @param parameters List of API parameters
+     * @return Map with parameter names and their example values
      */
     public Map<String, Object> generatePathParamExamples(List<ApiParameter> parameters) {
         if (parameters == null || parameters.isEmpty()) {
@@ -29,10 +29,10 @@ public class ParameterValueGenerator {
     }
 
     /**
-     * Genera valores de ejemplo para parámetros de tipo query.
+     * Generates example values for query parameters.
      *
-     * @param parameters Lista de parámetros de API
-     * @return Mapa con nombres de parámetros y sus valores de ejemplo
+     * @param parameters List of API parameters
+     * @return Map with parameter names and their example values
      */
     public Map<String, Object> generateQueryParamExamples(List<ApiParameter> parameters) {
         if (parameters == null || parameters.isEmpty()) {
@@ -43,7 +43,7 @@ public class ParameterValueGenerator {
     }
 
     /**
-     * Genera valores de ejemplo para parámetros de un tipo específico.
+     * Generates example values for parameters of a specific type.
      */
     private Map<String, Object> generateParamExamples(List<ApiParameter> parameters, String location) {
         Map<String, Object> paramValues = new HashMap<>();
@@ -60,10 +60,10 @@ public class ParameterValueGenerator {
     }
 
     /**
-     * Genera un valor de ejemplo basado en el tipo de esquema y nombre del parámetro.
+     * Generates an example value based on the schema type and parameter name.
      */
     private Object generateExampleValue(String paramName, String schemaType) {
-        // Primero verifica si el nombre sugiere un tipo específico de dato
+        // First check if the name suggests a specific data type
         if (paramName.toLowerCase().contains("id")) {
             return schemaType.equals("string") ? UUID.randomUUID().toString() : 12345;
         } else if (paramName.toLowerCase().contains("date")) {
@@ -72,7 +72,7 @@ public class ParameterValueGenerator {
             return "ejemplo@dominio.com";
         }
 
-        // Si no hay pista en el nombre, usa el tipo de esquema
+        // If there's no hint in the name, use the schema type
         return switch (schemaType) {
             case "string" -> "ejemplo";
             case "integer" -> 123;
@@ -83,13 +83,13 @@ public class ParameterValueGenerator {
     }
 
     /**
-     * Genera valores para todos los tipos de parámetros.
+     * Generates values for all parameter types.
      */
     public Map<String, Object> generateAllParamExamples(List<ApiParameter> parameters) {
         Map<String, Object> allParams = new HashMap<>();
         allParams.putAll(generatePathParamExamples(parameters));
         allParams.putAll(generateQueryParamExamples(parameters));
-        // Añadir otros tipos de parámetros según sea necesario
+        // Add other parameter types as needed
         return allParams;
     }
 }
