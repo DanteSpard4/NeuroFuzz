@@ -17,10 +17,13 @@ import java.util.Optional;
 
 public class OpenApiLoader {
 
-    private OpenAPI openAPI;
+    private final OpenAPI openAPI;
 
-    public Optional<List<ApiEndpoint>> parse(String specFilePath) {
-        openAPI = new OpenAPIV3Parser().read(specFilePath);
+    public OpenApiLoader(String specFilePath) {
+        this.openAPI = new OpenAPIV3Parser().read(specFilePath);
+    }
+
+    public Optional<List<ApiEndpoint>> parse() {
 
         if (openAPI.getPaths() == null) return Optional.empty();
 

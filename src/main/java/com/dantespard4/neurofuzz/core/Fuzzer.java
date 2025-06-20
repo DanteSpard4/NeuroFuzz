@@ -2,10 +2,7 @@ package com.dantespard4.neurofuzz.core;
 
 import com.dantespard4.neurofuzz.http.HttpExecutor;
 import com.dantespard4.neurofuzz.http.HttpResult;
-import com.dantespard4.neurofuzz.openapi.OpenApiLoader;
-import com.dantespard4.neurofuzz.openapi.generator.ParameterValueGenerator;
-import com.dantespard4.neurofuzz.openapi.generator.PayloadGenerator;
-import com.dantespard4.neurofuzz.openapi.model.ApiEndpoint;
+import com.dantespard4.neurofuzz.openapi.OpenApiService;
 import com.dantespard4.neurofuzz.util.FuzzingStats;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -56,55 +53,29 @@ public class Fuzzer {
         printStatistics();
     }
 
-    public void fuzzOpenApi(String url,String path, boolean verbose, File saveFile) {
-        try (BufferedWriter bw = (saveFile != null) ? new BufferedWriter(new FileWriter(saveFile)) : null){
-            var endpoints = new OpenApiLoader()
-                    .parse(path)
-                    .orElseThrow(() -> new RuntimeException("Failed to load OpenAPI spec"));
+    public void fuzzOpenApi(String url, String path, boolean verbose, File saveFile) {
+        try (BufferedWriter bw = (saveFile != null) ? new BufferedWriter(new FileWriter(saveFile)) : null) {
 
-            var payloadGenerator = new PayloadGenerator(path);
-            var parameterValueGenerator = new ParameterValueGenerator();
+            var openApiService = new OpenApiService(path);
+            var targets = openApiService.generateFuzzingTargets(url);
 
-            for (ApiEndpoint endpoint : endpoints) {
-                String payload = endpoint.requestBodySchema() != null ? endpoint.requestBodySchema() : "{}";
-                var payloadf = payloadGenerator.generatePayloadFromSchemaName(endpoint.requestBodySchema());
-
-                var payloadff = JSON_WRITER.writeValueAsString(payloadf);
-                System.out.println("Generated Payload: " + payloadff);
-                String endpointUrl = url + endpoint.path();
-
-                var pathParams = parameterValueGenerator.generatePathParamExamples(endpoint.parameters());
-
-                if (!pathParams.isEmpty()) {
-                    System.out.println("Generated Path Parameters: " + pathParams);
-                    for (Map.Entry<String, Object> pathParam: pathParams.entrySet()) {
-                        endpointUrl = endpointUrl.replace("{" + pathParam.getKey() + "}", String.valueOf(pathParam.getValue()));
-                    }
-                    System.out.println("URL with Path Parameter: " + endpointUrl);
-                } else {
-                    System.out.println("No path parameters found for endpoint: " + endpoint.path());
-                }
+            for (FuzzingTarget target : targets) {
 
                 if (verbose) {
-                    System.out.println("[*] Fuzzing endpoint: " + endpointUrl);
+                    System.out.println("[*] Fuzzing endpoint: " + target.url());
                 }
-
-                var headers = Map.of("Authorization", "Bearer: 5446145");
-
-                HttpResult result = httpExecutor.sendHttpMethod(endpointUrl, endpoint.method(), payloadff, headers);
+                HttpResult result = httpExecutor.sendHttpMethod(target.url(), target.method(), target.payload(), target.headers());
                 stats.recordStatus(result.statusCode());
 
                 if (shouldSkipResult(result.statusCode())) continue;
 
                 if (bw != null) {
-                    saveResult(bw, payload, result);
+                    saveResult(bw, target.payload(), result);
                 }
-
                 printResult(result, verbose);
             }
 
-
-        }catch (IOException e) {
+        } catch (IOException e) {
             System.err.println(RED + "[!] Error writing to output file: " + e.getMessage() + RESET);
         }
 

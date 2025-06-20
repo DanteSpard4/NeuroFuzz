@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
+
 public class HttpExecutor {
 
     private final OkHttpClient client ;
@@ -26,7 +28,11 @@ public class HttpExecutor {
     }
 
     public HttpResult sendHttpMethod(String url, String method, String jsonPayload, Map<String, String> headers) {
-        RequestBody body = RequestBody.create(jsonPayload, MediaType.parse("application/json; charset=utf-8"));
+
+        RequestBody body;
+        body = RequestBody.create(Objects.requireNonNullElse(jsonPayload, ""), MediaType.parse("application/json; charset=utf-8"));
+
+
         Request.Builder requestBuilder = new Request.Builder().url(url);
 
         if (headers != null) {
